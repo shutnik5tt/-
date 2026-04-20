@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using BookshopApp.Data;
@@ -18,7 +20,6 @@ namespace BookshopApp.Views
             _currentUser = user;
             TxtUserInfo.Text = $"Пользователь: {user.login}  |  Роль: {user.role}";
 
-            // Скрыть вкладку пользователей для кассира
             if (user.role != "admin")
                 TabUsers.Visibility = Visibility.Collapsed;
 
@@ -34,7 +35,128 @@ namespace BookshopApp.Views
             LoadTransactions();
         }
 
-        // ===== АВТОРЫ =====
+        private void BtnExport_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = $"Книжный_магазин_экспорт_{DateTime.Now:yyyyMMdd_HHmmss}",
+                DefaultExt = ".xls",
+                Filter = "Excel файлы (*.xls)|*.xls"
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            try
+            {
+                using var db = new AppDbContext();
+                using var writer = new StreamWriter(dialog.FileName, false, Encoding.UTF8);
+
+                WriteXmlExcel(writer, db);
+
+                writer.Close();
+
+                MessageBox.Show($"Экспорт успешно выполнен!\nФайл сохранён:\n{dialog.FileName}",
+                    "Экспорт завершён", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при экспорте:\n{ex.Message}",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void WriteXmlExcel(StreamWriter writer, AppDbContext db)
+        {
+            writer.WriteLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            writer.WriteLine("<?mso-application progid=\"Excel.Sheet\"?>");
+            writer.WriteLine("<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\"");
+            writer.WriteLine("          xmlns:o=\"urn:schemas-microsoft-com:office:office\"");
+            writer.WriteLine("          xmlns:x=\"urn:schemas-microsoft-com:office:excel\"");
+            writer.WriteLine("          xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\"");
+            writer.WriteLine("          xmlns:html=\"http://www.w3.org/TR/REC-html40\">");
+
+            writer.WriteLine("  <Styles>");
+            writer.WriteLine("    <Style ss:ID=\"Header\">");
+            writer.WriteLine("      <Font ss:Bold=\"1\"/>");
+            writer.WriteLine("      <Interior ss:Color=\"#D3D3D3\" ss:Pattern=\"Solid\"/>");
+            writer.WriteLine("    </Style>");
+            writer.WriteLine("  </Styles>");
+
+            WriteBooksWorksheet(writer, db);
+            WriteAuthorsWorksheet(writer, db);
+
+            writer.WriteLine("</Workbook>");
+        }
+
+        private void WriteBooksWorksheet(StreamWriter writer, AppDbContext db)
+        {
+            var books = db.Books.OrderBy(b => b.title).ToList();
+
+            writer.WriteLine("  <Worksheet ss:Name=\"Книги\">");
+            writer.WriteLine("    <Table>");
+
+            writer.WriteLine("      <Row>");
+            writer.WriteLine("        <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">ID</Data></Cell>");
+            writer.WriteLine("        <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Название</Data></Cell>");
+            writer.WriteLine("        <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Описание</Data></Cell>");
+            writer.WriteLine("        <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Дата выхода</Data></Cell>");
+            writer.WriteLine("        <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Цена (руб.)</Data></Cell>");
+            writer.WriteLine("        <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Остаток</Data></Cell>");
+            writer.WriteLine("      </Row>");
+
+            foreach (var book in books)
+            {
+                string description = (book.description ?? "").Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+                string title = book.title.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+
+                writer.WriteLine("      <Row>");
+                writer.WriteLine($"        <Cell><Data ss:Type=\"Number\">{book.ID_book}</Data></Cell>");
+                writer.WriteLine($"        <Cell><Data ss:Type=\"String\">{title}</Data></Cell>");
+                writer.WriteLine($"        <Cell><Data ss:Type=\"String\">{description}</Data></Cell>");
+                writer.WriteLine($"        <Cell><Data ss:Type=\"String\">{book.release_date:dd.MM.yyyy}</Data></Cell>");
+                writer.WriteLine($"        <Cell><Data ss:Type=\"Number\">{book.unit_price.ToString(System.Globalization.CultureInfo.InvariantCulture)}</Data></Cell>");
+                writer.WriteLine($"        <Cell><Data ss:Type=\"Number\">{book.stock_quantity}</Data></Cell>");
+                writer.WriteLine("      </Row>");
+            }
+
+            writer.WriteLine("    </Table>");
+            writer.WriteLine("  </Worksheet>");
+        }
+
+        private void WriteAuthorsWorksheet(StreamWriter writer, AppDbContext db)
+        {
+            var authors = db.Authors.OrderBy(a => a.last_name).ThenBy(a => a.first_name).ToList();
+
+            writer.WriteLine("  <Worksheet ss:Name=\"Авторы\">");
+            writer.WriteLine("    <Table>");
+
+            writer.WriteLine("      <Row>");
+            writer.WriteLine("        <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">ID</Data></Cell>");
+            writer.WriteLine("        <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Фамилия</Data></Cell>");
+            writer.WriteLine("        <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Имя</Data></Cell>");
+            writer.WriteLine("        <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Отчество</Data></Cell>");
+            writer.WriteLine("        <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Дата рождения</Data></Cell>");
+            writer.WriteLine("      </Row>");
+
+            foreach (var author in authors)
+            {
+                string lastName = author.last_name.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+                string firstName = author.first_name.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+                string middleName = (author.middle_name ?? "").Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+
+                writer.WriteLine("      <Row>");
+                writer.WriteLine($"        <Cell><Data ss:Type=\"Number\">{author.ID_author}</Data></Cell>");
+                writer.WriteLine($"        <Cell><Data ss:Type=\"String\">{lastName}</Data></Cell>");
+                writer.WriteLine($"        <Cell><Data ss:Type=\"String\">{firstName}</Data></Cell>");
+                writer.WriteLine($"        <Cell><Data ss:Type=\"String\">{middleName}</Data></Cell>");
+                writer.WriteLine($"        <Cell><Data ss:Type=\"String\">{author.birth_date:dd.MM.yyyy}</Data></Cell>");
+                writer.WriteLine("      </Row>");
+            }
+
+            writer.WriteLine("    </Table>");
+            writer.WriteLine("  </Worksheet>");
+        }
 
         private void LoadAuthors(string search = "")
         {
@@ -90,8 +212,6 @@ namespace BookshopApp.Views
             db.Authors.Add(a);
             db.SaveChanges();
         }
-
-        // ===== КНИГИ =====
 
         private void LoadBooks(string search = "")
         {
@@ -149,8 +269,6 @@ namespace BookshopApp.Views
             db.SaveChanges();
         }
 
-        // ===== АВТОРЫ-КНИГИ =====
-
         private void LoadAuthorBooks()
         {
             using var db = new AppDbContext();
@@ -166,7 +284,6 @@ namespace BookshopApp.Views
             if (dlg.ShowDialog() == true)
             {
                 using var db = new AppDbContext();
-                // Проверка дубликата
                 bool exists = db.AuthorBooks.Any(ab => ab.ID_author == dlg.Result.ID_author && ab.ID_book == dlg.Result.ID_book);
                 if (exists) { MessageBox.Show("Такая связь уже существует."); return; }
                 db.AuthorBooks.Add(dlg.Result);
@@ -188,8 +305,6 @@ namespace BookshopApp.Views
         }
 
         private void BtnAbRefresh_Click(object sender, RoutedEventArgs e) => LoadAuthorBooks();
-
-        // ===== ПОЛЬЗОВАТЕЛИ =====
 
         private void LoadUsers()
         {
@@ -241,8 +356,6 @@ namespace BookshopApp.Views
         }
 
         private void BtnUserRefresh_Click(object sender, RoutedEventArgs e) => LoadUsers();
-
-        // ===== ТРАНЗАКЦИИ =====
 
         private void LoadTransactions()
         {
@@ -299,7 +412,6 @@ namespace BookshopApp.Views
                 var t = db.Transactions.Include(x => x.BookTransactions).FirstOrDefault(x => x.ID_transaction == vm.Transaction.ID_transaction);
                 if (t != null)
                 {
-                    // Вернуть остатки
                     foreach (var bt in t.BookTransactions)
                     {
                         var book = db.Books.Find(bt.ID_book);
@@ -323,7 +435,6 @@ namespace BookshopApp.Views
         }
     }
 
-    // Вспомогательный класс для отображения итога транзакции
     public class TransactionViewModel
     {
         public Transaction Transaction { get; }

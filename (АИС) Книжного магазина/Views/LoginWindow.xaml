@@ -6,26 +6,27 @@
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="16"/>
+            <RowDefinition Height="20"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="10"/>
+            <RowDefinition Height="5"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="16"/>
+            <RowDefinition Height="15"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="10"/>
+            <RowDefinition Height="5"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Книжный магазин" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
+        <TextBlock Grid.Row="0" Text="Книжный магазин" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
 
-        <TextBlock Grid.Row="2" Text="Логин:"/>
-        <TextBox Grid.Row="4" x:Name="TxtLogin" Height="26"/>
+        <TextBlock Grid.Row="2" Text="Логин:" FontWeight="SemiBold"/>
+        <TextBox Grid.Row="4" x:Name="TxtLogin" Height="28" VerticalContentAlignment="Center"/>
 
-        <TextBlock Grid.Row="6" Text="Пароль:"/>
-        <PasswordBox Grid.Row="8" x:Name="TxtPassword" Height="26"/>
+        <TextBlock Grid.Row="6" Text="Пароль:" FontWeight="SemiBold"/>
+        <PasswordBox Grid.Row="8" x:Name="TxtPassword" Height="28" VerticalContentAlignment="Center"/>
 
-        <Button Grid.Row="8" Content="Войти" Width="80" HorizontalAlignment="Right"
-                VerticalAlignment="Center" Click="BtnLogin_Click" Margin="0,0,0,0"
-                IsDefault="True"/>
+        <Button Grid.Row="10" Content="Войти" Width="100" Height="30" HorizontalAlignment="Center"
+                Click="BtnLogin_Click" IsDefault="True"/>
     </Grid>
 </Window>

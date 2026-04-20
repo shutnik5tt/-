@@ -4,16 +4,18 @@
         Title="Книжный магазин — АИС" Height="620" Width="1000"
         WindowStartupLocation="CenterScreen">
     <DockPanel>
-        <!-- Верхняя панель -->
         <DockPanel DockPanel.Dock="Top" Margin="8,6,8,4">
-            <TextBlock x:Name="TxtUserInfo" FontSize="13" VerticalAlignment="Center"/>
-            <Button Content="Выйти" Width="70" HorizontalAlignment="Right"
-                    Click="BtnLogout_Click"/>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="TxtUserInfo" FontSize="13" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Экспорт в Excel" Width="120" Margin="0,0,10,0" Click="BtnExport_Click"/>
+                <Button Content="Выйти" Width="70" Click="BtnLogout_Click"/>
+            </StackPanel>
         </DockPanel>
 
         <TabControl x:Name="TabMain" Margin="4">
 
-            <!-- ===== Авторы ===== -->
             <TabItem Header="Авторы">
                 <DockPanel Margin="6">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
@@ -39,7 +41,6 @@
                 </DockPanel>
             </TabItem>
 
-            <!-- ===== Книги ===== -->
             <TabItem Header="Книги">
                 <DockPanel Margin="6">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
@@ -66,7 +67,6 @@
                 </DockPanel>
             </TabItem>
 
-            <!-- ===== Авторы-Книги ===== -->
             <TabItem Header="Авторы — Книги">
                 <DockPanel Margin="6">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
@@ -86,7 +86,6 @@
                 </DockPanel>
             </TabItem>
 
-            <!-- ===== Пользователи (только admin) ===== -->
             <TabItem Header="Пользователи" x:Name="TabUsers">
                 <DockPanel Margin="6">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
@@ -107,7 +106,6 @@
                 </DockPanel>
             </TabItem>
 
-            <!-- ===== Транзакции ===== -->
             <TabItem Header="Продажи">
                 <DockPanel Margin="6">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
@@ -126,11 +124,11 @@
                                   IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False"
                                   SelectionChanged="GridTransactions_SelectionChanged">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="ID"          Binding="{Binding ID_transaction}" Width="50"/>
-                                <DataGridTextColumn Header="Дата"        Binding="{Binding sale_date, StringFormat=dd.MM.yyyy HH:mm}" Width="140"/>
-                                <DataGridTextColumn Header="Кассир"      Binding="{Binding User.login}"     Width="130"/>
-                                <DataGridTextColumn Header="Оплата"      Binding="{Binding payment_type}"   Width="100"/>
-                                <DataGridTextColumn Header="Сумма"       Binding="{Binding TotalSum}"       Width="100"/>
+                                <DataGridTextColumn Header="ID"          Binding="{Binding Transaction.ID_transaction}" Width="50"/>
+                                <DataGridTextColumn Header="Дата"        Binding="{Binding Transaction.sale_date, StringFormat=dd.MM.yyyy HH:mm}" Width="140"/>
+                                <DataGridTextColumn Header="Кассир"      Binding="{Binding Transaction.User.login}"     Width="130"/>
+                                <DataGridTextColumn Header="Оплата"      Binding="{Binding Transaction.payment_type}"   Width="100"/>
+                                <DataGridTextColumn Header="Сумма"       Binding="{Binding TotalSum}"                   Width="100"/>
                             </DataGrid.Columns>
                         </DataGrid>
                         <GridSplitter Grid.Row="1" Height="6" HorizontalAlignment="Stretch"/>
